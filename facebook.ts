@@ -1,5 +1,3 @@
-import EventEmitter from 'events'
-
 export type Bindings = {
     FB_ACCESS_TOKEN: string
     FB_APP_SECRET: string
@@ -9,7 +7,7 @@ export type Bindings = {
     DB: D1Database
 }
 
-class Facebook extends EventEmitter {
+class Facebook {
     broadcastEchoes: boolean
     graphApiVersion: string
     accessToken: string
@@ -17,7 +15,6 @@ class Facebook extends EventEmitter {
 
 
     constructor(options: any | undefined = {}) {
-        super()
         this.accessToken = ''
         this.broadcastEchoes = options.broadcastEchoes || false
         this.graphApiVersion = options.graphApiVersion || 'v2.12'
@@ -43,7 +40,7 @@ class Facebook extends EventEmitter {
         }
     }
 
-    handleFacebookData(data: any) {
+    handleFacebookData(data: any, cb: any) {
         data.entry.forEach((entry: any) => {
             entry.messaging.forEach((event: any) => {
                 if (event.message && event.message.is_echo && !this.broadcastEchoes) {
@@ -51,20 +48,20 @@ class Facebook extends EventEmitter {
                 }
                 if (event.message && event.message.text) {
                     if (event.message.quick_reply) {
-                        this.emit('quick_reply', event)
+                        cb('quick_reply', event)
                     } else {
-                        this.emit('message', event)
+                        cb('message', event)
                     }
                 } else if (event.postback) {
-                    this.emit('postback', event)
+                    cb('postback', event)
                 } else if (event.read) {
-                    this.emit('read', event)
+                    cb('read', event)
                 } else if (event.delivery) {
-                    this.emit('delivery', event)
+                    cb('delivery', event)
                 } else if (event.account_linking) {
-                    this.emit('account_linking', event)
+                    cb('account_linking', event)
                 } else if (event.referral) {
-                    this.emit('referral', event)
+                    cb('referral', event)
                 } else {
                     console.log('Webhook received unknown event: ', event)
                 }
@@ -84,8 +81,6 @@ class Facebook extends EventEmitter {
         const messagingType = options && options.messagingType
         const notificationType = options && options.notificationType
         const tag = options && options.tag
-        const onDelivery = options && options.onDelivery
-        const onRead = options && options.onRead
         const reqBody: any = {
             recipient,
             message: typeof message === 'object' ? message : { text: message },
@@ -98,24 +93,12 @@ class Facebook extends EventEmitter {
         if (tag) {
             reqBody.tag = tag
         }
-        const req = () => (
-            this.sendRequest(reqBody).then((json) => {
-                if (typeof onDelivery === 'function') {
-                    this.once('delivery', onDelivery)
-                }
-                if (typeof onRead === 'function') {
-                    this.once('read', onRead)
-                }
-                return json
-            })
-        )
         if (options && options.typing) {
             const autoTimeout = (message && message.text) ? message.text.length * 10 : 1000
             const timeout = (typeof options.typing === 'number') ? options.typing : autoTimeout
             await this.sendTypingIndicator(recipientId, timeout)
-            return req()
         }
-        return req()
+        return this.sendRequest(reqBody)
     }
 
     sendTypingIndicator(recipientId: object | string, milliseconds: number) {
