@@ -103,15 +103,10 @@ fb.on('postback', async (payload) => {
   fb.sendTypingIndicator(senderId, 1000)
 
   if (event === 'GET_STARTED' || event === 'MENU_FAQ') {
-    let user: any
-    if (event === 'GET_STARTED') {
-      user = await fb.database.prepare(`SELECT * FROM customers WHERE id='${senderId}'`).first()
-      if (!user) {
-        user = await fb.getUserProfile(senderId)
-        await fb.database.prepare(`INSERT INTO customers(id, first_name, last_name, gender, talk_to_person) VALUES('${user.id}','${user.first_name}','${user.last_name}','${user.gender}', 0)`).run()
-      }
-    } else {
-      user = await fb.database.prepare(`SELECT * FROM customers WHERE id='${senderId}'`).first()
+    let user: any = await fb.database.prepare(`SELECT * FROM customers WHERE id='${senderId}'`).first()
+    if (!user) {
+      user = await fb.getUserProfile(senderId)
+      await fb.database.prepare(`INSERT INTO customers(id, first_name, last_name, gender, talk_to_person) VALUES('${user.id}','${user.first_name}','${user.last_name}','${user.gender}', 0)`).run()
     }
     const faq: any = { text: `Hi ${user.gender === 'male' ? 'Sir' : 'Ma\'am'} ${user.first_name}! How may I help you?\n${questions.map((question, i) => `${i + 1}. ${question}`).join('\n')}` }
     const menus: any[] = []
