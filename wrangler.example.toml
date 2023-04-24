@@ -1,0 +1,19 @@
+name = "camp-cesaria-bot"
+workers_dev = true
+node_compat = true
+
+[[ d1_databases ]]
+binding = ""
+database_name = ""
+database_id = ""
+
+[vars]
+FB_ACCESS_TOKEN=""
+FB_APP_SECRET=""
+FB_VERIFY_TOKEN=""
+
+OPENAI_ORG=""
+OPENAI_API=""
+
+[build]
+command = "npm run build"
