@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vespaiach/axios-fetch-adapter": "^0.3.1",
+    "crypto-js": "^4.1.1",
     "hono": "^3.1.6",
     "openai": "^3.2.1",
     "pg": "^8.10.0"
